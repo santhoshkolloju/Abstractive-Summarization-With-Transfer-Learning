@@ -23,7 +23,8 @@ unzip bert_pretrained_models/uncased_L-12_H-768_A-12.zip -d bert_pretrained_mode
 
 
 
-<h2>#download the texar code and install all the python packages specified in requirement.txt of texar_repo</h2>
+<h2>#download the texar code and install all the python packages specified 
+    in requirement.txt of texar_repo</h2>
 import sys
 !test -d texar_repo || git clone https://github.com/asyml/texar.git texar_repo
 if not 'texar_repo' in sys.path:
@@ -149,8 +150,9 @@ opt = {
     }
 }
 
-<h1>#learning rate used called linear learning rate warmup steps should be 1% of your number of iteratons.learning rate 
-increases linearly till the warmup number of steps and then decreases.</h1>
+<h1>#learning rate used called linear learning rate warmup steps should be 1% of your 
+     number of iteratons.learning rate 
+     increases linearly till the warmup number of steps and then decreases.</h1>
 lr = {
     'learning_rate_schedule': 'constant.linear_warmup.rsqrt_decay.rsqrt_depth',
     'lr_constant': 2 * (hidden_dim ** -0.5),
