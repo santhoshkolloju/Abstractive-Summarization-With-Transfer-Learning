@@ -11,7 +11,7 @@ One of the advantages of using Transfomer Networks is training is much faster th
 Transformer based models generate more gramatically correct  coherent sentences.
 
 
-<h3> Code </h3>
+<h1> Code </h1>
 
 <pre>
 
@@ -150,9 +150,9 @@ opt = {
     }
 }
 
-<h2>learning rate used called linear learning rate warmup steps should be 1% of your 
+<h3>learning rate used called linear learning rate warmup steps should be 1% of your 
      number of iteratons.learning rate 
-     increases linearly till the warmup number of steps and then decreases.</h2>
+     increases linearly till the warmup number of steps and then decreases.</h3>
 lr = {
     'learning_rate_schedule': 'constant.linear_warmup.rsqrt_decay.rsqrt_depth',
     'lr_constant': 2 * (hidden_dim ** -0.5),
@@ -160,7 +160,7 @@ lr = {
     'warmup_steps': 2000,
 }
 
-<h1>using berts [CLS] and [SEP] token as beginning and end of sentence</h1>
+<h3>using berts [CLS] and [SEP] token as beginning and end of sentence</h3>
 bos_token_id =101
 eos_token_id = 102
 
@@ -182,7 +182,7 @@ max_seq_length_tgt = 400
 
 
 
-<h1>change the path pointing to your location</h1>
+<h3>change the path pointing to your location</h3>
 bert_pretrain_dir = 'bert_pretrained_models/uncased_L-12_H-768_A-12'
 
 
@@ -193,7 +193,7 @@ bert_config = model_utils.transform_bert_to_texar_config(
             os.path.join(bert_pretrain_dir, 'bert_config.json'))
 
 
-<h1>Bert Word Piece Tokenization </h1>
+<h3>Bert Word Piece Tokenization </h3>
 tokenizer = tokenization.FullTokenizer(
         vocab_file=os.path.join(bert_pretrain_dir, 'vocab.txt'),
         do_lower_case=True)
@@ -206,7 +206,7 @@ eval_dataset = get_dataset(processor,tokenizer,"./",max_seq_length_src,max_seq_l
 test_dataset = get_dataset(processor,tokenizer,"./",max_seq_length_src,max_seq_length_tgt,4,'test',"./data")
 <h1>Three files gets created under the folder data </h1>
 
-<h3> Model Architecture </h3>
+<h2> Model Architecture </h2>
 <h1>Placeholders </h1>
 src_input_ids = tf.placeholder(tf.int64, shape=(None, None))
 src_segment_ids = tf.placeholder(tf.int64, shape=(None, None))
