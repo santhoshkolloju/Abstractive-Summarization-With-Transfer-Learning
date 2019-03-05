@@ -160,7 +160,7 @@ lr = {
     'warmup_steps': 2000,
 }
 
-<h1>#using berts [CLS] and [SEP] token as beginning and end of sentence</h1>
+<h1>using berts [CLS] and [SEP] token as beginning and end of sentence</h1>
 bos_token_id =101
 eos_token_id = 102
 
@@ -205,6 +205,282 @@ train_dataset = get_dataset(processor,tokenizer,"./",max_seq_length_src,max_seq_
 eval_dataset = get_dataset(processor,tokenizer,"./",max_seq_length_src,max_seq_length_tgt,4,'eval',"./data")
 test_dataset = get_dataset(processor,tokenizer,"./",max_seq_length_src,max_seq_length_tgt,4,'test',"./data")
 <h1>Three files gets created under the folder data </h1>
+
+<h3> Model Architecture </h3>
+<h1>Placeholders </h1>
+src_input_ids = tf.placeholder(tf.int64, shape=(None, None))
+src_segment_ids = tf.placeholder(tf.int64, shape=(None, None))
+tgt_input_ids = tf.placeholder(tf.int64, shape=(None, None))
+tgt_segment_ids = tf.placeholder(tf.int64, shape=(None, None))
+
+batch_size = tf.shape(src_input_ids)[0]
+
+src_input_length = tf.reduce_sum(1 - tf.to_int32(tf.equal(src_input_ids, 0)),
+                             axis=1)
+tgt_input_length = tf.reduce_sum(1 - tf.to_int32(tf.equal(src_input_ids, 0)),
+                             axis=1)
+
+labels = tf.placeholder(tf.int64, shape=(None, None))
+is_target = tf.to_float(tf.not_equal(labels, 0))
+
+global_step = tf.Variable(0, dtype=tf.int64, trainable=False)
+learning_rate = tf.placeholder(tf.float64, shape=(), name='lr')
+
+<h1>create the data set iterator </h1>
+iterator = tx.data.FeedableDataIterator({
+        'train': train_dataset, 'eval': eval_dataset, 'test': test_dataset})
+
+batch = iterator.get_next()
+
+
+<h1>encoder Bert model </h1>
+print("Intializing the Bert Encoder Graph")
+with tf.variable_scope('bert'):
+        embedder = tx.modules.WordEmbedder(
+            vocab_size=bert_config.vocab_size,
+            hparams=bert_config.embed)
+        word_embeds = embedder(src_input_ids)
+
+        #Creates segment embeddings for each type of tokens.
+        segment_embedder = tx.modules.WordEmbedder(
+            vocab_size=bert_config.type_vocab_size,
+            hparams=bert_config.segment_embed)
+        segment_embeds = segment_embedder(src_segment_ids)
+
+        input_embeds = word_embeds + segment_embeds
+
+        # The BERT model (a TransformerEncoder)
+        encoder = tx.modules.TransformerEncoder(hparams=bert_config.encoder)
+        encoder_output = encoder(input_embeds, src_input_length)
+        
+        # Builds layers for downstream classification, which is also initialized
+        # with BERT pre-trained checkpoint.
+        with tf.variable_scope("pooler"):
+            # Uses the projection of the 1st-step hidden vector of BERT output
+            # as the representation of the sentence
+            bert_sent_hidden = tf.squeeze(encoder_output[:, 0:1, :], axis=1)
+            bert_sent_output = tf.layers.dense(
+                bert_sent_hidden, config_downstream.hidden_dim,
+                activation=tf.tanh)
+            output = tf.layers.dropout(
+                bert_sent_output, rate=0.1, training=tx.global_mode_train())
+
+
+<h1>Loads pretrained BERT model parameters</h1>
+print("loading the bert pretrained weights")
+init_checkpoint = os.path.join(bert_pretrain_dir, 'bert_model.ckpt')
+model_utils.init_bert_checkpoint(init_checkpoint)
+
+
+<h1>decoder part and mle losss</h1>
+tgt_embedding = tf.concat(
+    [tf.zeros(shape=[1, embedder.dim]), embedder.embedding[1:, :]], axis=0)
+
+decoder = tx.modules.TransformerDecoder(embedding=tgt_embedding,
+                             hparams=dcoder_config)
+<h1>For training this takes as input BERT encoder final hidden states </h1>
+outputs = decoder(
+    memory=encoder_output,
+    memory_sequence_length=src_input_length,
+    inputs=embedder(tgt_input_ids),
+    sequence_length=tgt_input_length,
+    decoding_strategy='train_greedy',
+    mode=tf.estimator.ModeKeys.TRAIN
+)
+
+mle_loss = transformer_utils.smoothing_cross_entropy(
+        outputs.logits, labels, vocab_size, loss_label_confidence)
+mle_loss = tf.reduce_sum(mle_loss * is_target) / tf.reduce_sum(is_target)
+
+train_op = tx.core.get_train_op(
+        mle_loss,
+        learning_rate=learning_rate,
+        global_step=global_step,
+        hparams=opt)
+
+tf.summary.scalar('lr', learning_rate)
+tf.summary.scalar('mle_loss', mle_loss)
+summary_merged = tf.summary.merge_all()
+
+<h1>Code for Inference </h1>
+#prediction 
+start_tokens = tf.fill([tx.utils.get_batch_size(src_input_ids)],
+                       bos_token_id)
+predictions = decoder(
+    memory=encoder_output,
+    memory_sequence_length=src_input_length,
+    decoding_strategy='infer_greedy',
+    beam_width=beam_width,
+    alpha=alpha,
+    start_tokens=start_tokens,
+    end_token=eos_token_id,
+    max_decoding_length=400,
+    mode=tf.estimator.ModeKeys.PREDICT
+)
+if beam_width <= 1:
+    inferred_ids = predictions[0].sample_id
+else:
+    # Uses the best sample by beam search
+    inferred_ids = predictions['sample_id'][:, :, 0]
+
+<h1> Saver object for checkpointing </h1>
+saver = tf.train.Saver(max_to_keep=5)
+best_results = {'score': 0, 'epoch': -1}
+
+<h1> Training the model </h1>
+def _train_epoch(sess, epoch, step, smry_writer):
+        
+            
+        fetches = {
+            'step': global_step,
+            'train_op': train_op,
+            'smry': summary_merged,
+            'loss': mle_loss,
+        }
+
+        while True:
+            try:
+              feed_dict = {
+                iterator.handle: iterator.get_handle(sess, 'train'),
+                tx.global_mode(): tf.estimator.ModeKeys.TRAIN,
+              }
+              op = sess.run([batch],feed_dict)
+              feed_dict = {
+                   src_input_ids:op[0]['src_input_ids'],
+                   src_segment_ids : op[0]['src_segment_ids'],
+                   tgt_input_ids:op[0]['tgt_input_ids'],
+
+                   labels:op[0]['tgt_labels'],
+                   learning_rate: utils.get_lr(step, lr),
+                   tx.global_mode(): tf.estimator.ModeKeys.TRAIN
+                }
+
+
+              fetches_ = sess.run(fetches, feed_dict=feed_dict)
+              step, loss = fetches_['step'], fetches_['loss']
+              if step and step % display_steps == 0:
+                  logger.info('step: %d, loss: %.4f', step, loss)
+                  print('step: %d, loss: %.4f' % (step, loss))
+                  smry_writer.add_summary(fetches_['smry'], global_step=step)
+              <h1>checkpoints every 1000 iterations </h1>
+              if step and step % 1000 == 0:
+                  model_path = model_dir+"/model_"+str(step)+".ckpt"
+                  logger.info('saving model to %s', model_path)
+                  print('saving model to %s' % model_path)
+                  saver.save(sess, model_path)
+              if step and step % eval_steps == 0:
+                  _eval_epoch(sess, epoch, mode='eval')
+            except tf.errors.OutOfRangeError:
+                break
+
+        return step
+
+def _eval_epoch(sess, epoch, mode):
+
+        references, hypotheses = [], []
+        bsize = test_batch_size
+        fetches = {
+                'inferred_ids': inferred_ids,
+            }
+        bno=0
+        while True:
+            
+            #print("Temp",temp)
+            try:
+              print("Batch",bno)
+              feed_dict = {
+              iterator.handle: iterator.get_handle(sess, 'eval'),
+              tx.global_mode(): tf.estimator.ModeKeys.EVAL,
+              }
+              op = sess.run([batch],feed_dict)
+              feed_dict = {
+                   src_input_ids:op[0]['src_input_ids'],
+                   src_segment_ids : op[0]['src_segment_ids'],
+                   tx.global_mode(): tf.estimator.ModeKeys.EVAL
+              }
+              fetches_ = sess.run(fetches, feed_dict=feed_dict)
+              labels = op[0]['tgt_labels']
+              hypotheses.extend(h.tolist() for h in fetches_['inferred_ids'])
+              references.extend(r.tolist() for r in labels)
+              hypotheses = utils.list_strip_eos(hypotheses, eos_token_id)
+              references = utils.list_strip_eos(references, eos_token_id)
+              <h1> Displaying the output of summary here we replace ## by empty space is because 
+              bert by default uses word piece tokenization</h1>
+              print("Output Summary is ")
+              for s_toks,summ_toks in zip(references,hypotheses):
+                story = tokenizer.convert_ids_to_tokens(s_toks)
+                print("Story is "" ".join(story).replace(" ##",""))
+                summ = tokenizer.convert_ids_to_tokens(summ_toks)
+                print("Story is "" ".join(summ).replace(" ##",""))
+              bno = bno+1
+              
+            except tf.errors.OutOfRangeError:
+                break
+
+
+        if mode == 'eval':
+            # Writes results to files to evaluate BLEU
+            # For 'eval' mode, the BLEU is based on token ids (rather than
+            # text tokens) and serves only as a surrogate metric to monitor
+            # the training process
+            fname = os.path.join(model_dir, 'tmp.eval')
+            
+            hypotheses = tx.utils.str_join(hypotheses)
+            references = tx.utils.str_join(references)
+            hyp_fn, ref_fn = tx.utils.write_paired_text(
+                hypotheses, references, fname, mode='s')
+            eval_bleu = bleu_wrapper(ref_fn, hyp_fn, case_sensitive=True)
+            eval_bleu = 100. * eval_bleu
+            logger.info('epoch: %d, eval_bleu %.4f', epoch, eval_bleu)
+            print('epoch: %d, eval_bleu %.4f' % (epoch, eval_bleu))
+
+            if eval_bleu > best_results['score']:
+                logger.info('epoch: %d, best bleu: %.4f', epoch, eval_bleu)
+                best_results['score'] = eval_bleu
+                best_results['epoch'] = epoch
+                model_path = os.path.join(model_dir, 'best-model.ckpt')
+                logger.info('saving model to %s', model_path)
+                print('saving model to %s' % model_path)
+                saver.save(sess, model_path)
+
+<h1> Run Training </h1>
+logging_file= "logging.txt"
+logger = utils.get_logger(logging_file)
+with tf.Session() as sess:
+    sess.run(tf.global_variables_initializer())
+    sess.run(tf.local_variables_initializer())
+    sess.run(tf.tables_initializer())
+
+    smry_writer = tf.summary.FileWriter(model_dir, graph=sess.graph)
+
+    if run_mode == 'train_and_evaluate':
+        logger.info('Begin running with train_and_evaluate mode')
+
+        if tf.train.latest_checkpoint(model_dir) is not None:
+            logger.info('Restore latest checkpoint in %s' % model_dir)
+            saver.restore(sess, tf.train.latest_checkpoint(model_dir))
+        
+        iterator.initialize_dataset(sess)
+
+        step = 5000
+        for epoch in range(max_train_epoch):
+          iterator.restart_dataset(sess, 'train')
+          step = _train_epoch(sess, epoch, step, smry_writer)
+
+    elif run_mode == 'test':
+        logger.info('Begin running with test mode')
+
+        logger.info('Restore latest checkpoint in %s' % model_dir)
+        saver.restore(sess, tf.train.latest_checkpoint(model_dir))
+
+        _eval_epoch(sess, 0, mode='test')
+
+    else:
+        raise ValueError('Unknown mode: {}'.format(run_mode))
+
+
+
+
 
 
 </pre>
