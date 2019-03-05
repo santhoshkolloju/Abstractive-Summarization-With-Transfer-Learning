@@ -11,7 +11,7 @@ One of the advantages of using Transfomer Networks is training is much faster th
 Transformer based models generate more gramatically correct  coherent sentences.
 
 
-<h1> Comming up: Will update the code with seed support for generation and make it as a library to run on any data </h1> 
+<h1> Will update the code with seed support for generation and make it as a genric code to run on any data </h1> 
 
 <h1> Code </h1>
 
