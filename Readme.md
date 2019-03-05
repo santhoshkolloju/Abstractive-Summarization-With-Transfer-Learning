@@ -207,7 +207,7 @@ test_dataset = get_dataset(processor,tokenizer,"./",max_seq_length_src,max_seq_l
 <h1>Three files gets created under the folder data </h1>
 
 <h2> Model Architecture </h2>
-<h1>Placeholders </h1>
+<h3>Placeholders </h3>
 src_input_ids = tf.placeholder(tf.int64, shape=(None, None))
 src_segment_ids = tf.placeholder(tf.int64, shape=(None, None))
 tgt_input_ids = tf.placeholder(tf.int64, shape=(None, None))
@@ -233,7 +233,7 @@ iterator = tx.data.FeedableDataIterator({
 batch = iterator.get_next()
 
 
-<h1>encoder Bert model </h1>
+<h2>encoder Bert model </h2>
 print("Intializing the Bert Encoder Graph")
 with tf.variable_scope('bert'):
         embedder = tx.modules.WordEmbedder(
@@ -266,19 +266,19 @@ with tf.variable_scope('bert'):
                 bert_sent_output, rate=0.1, training=tx.global_mode_train())
 
 
-<h1>Loads pretrained BERT model parameters</h1>
+<h3>Loads pretrained BERT model parameters</h3>
 print("loading the bert pretrained weights")
 init_checkpoint = os.path.join(bert_pretrain_dir, 'bert_model.ckpt')
 model_utils.init_bert_checkpoint(init_checkpoint)
 
 
-<h1>decoder part and mle losss</h1>
+<h3>decoder part and mle losss</h3>
 tgt_embedding = tf.concat(
     [tf.zeros(shape=[1, embedder.dim]), embedder.embedding[1:, :]], axis=0)
 
 decoder = tx.modules.TransformerDecoder(embedding=tgt_embedding,
                              hparams=dcoder_config)
-<h1>For training this takes as input BERT encoder final hidden states </h1>
+<h3>For training this takes as input BERT encoder final hidden states </h3>
 outputs = decoder(
     memory=encoder_output,
     memory_sequence_length=src_input_length,
@@ -302,7 +302,7 @@ tf.summary.scalar('lr', learning_rate)
 tf.summary.scalar('mle_loss', mle_loss)
 summary_merged = tf.summary.merge_all()
 
-<h1>Code for Inference </h1>
+<h2>Code for Inference </h2>
 #prediction 
 start_tokens = tf.fill([tx.utils.get_batch_size(src_input_ids)],
                        bos_token_id)
@@ -323,11 +323,11 @@ else:
     # Uses the best sample by beam search
     inferred_ids = predictions['sample_id'][:, :, 0]
 
-<h1> Saver object for checkpointing </h1>
+<h3> Saver object for checkpointing </h3>
 saver = tf.train.Saver(max_to_keep=5)
 best_results = {'score': 0, 'epoch': -1}
 
-<h1> Training the model </h1>
+<h3> Training the model </h3>
 def _train_epoch(sess, epoch, step, smry_writer):
         
             
@@ -404,8 +404,8 @@ def _eval_epoch(sess, epoch, mode):
               references.extend(r.tolist() for r in labels)
               hypotheses = utils.list_strip_eos(hypotheses, eos_token_id)
               references = utils.list_strip_eos(references, eos_token_id)
-              <h1> Displaying the output of summary here we replace ## by empty space is because 
-              bert by default uses word piece tokenization</h1>
+              <h3> Displaying the output of summary here we replace ## by empty space is because 
+              bert by default uses word piece tokenization</h3>
               print("Output Summary is ")
               for s_toks,summ_toks in zip(references,hypotheses):
                 story = tokenizer.convert_ids_to_tokens(s_toks)
@@ -443,7 +443,7 @@ def _eval_epoch(sess, epoch, mode):
                 print('saving model to %s' % model_path)
                 saver.save(sess, model_path)
 
-<h1> Run Training </h1>
+<h3> Run Training </h3>
 logging_file= "logging.txt"
 logger = utils.get_logger(logging_file)
 with tf.Session() as sess:
