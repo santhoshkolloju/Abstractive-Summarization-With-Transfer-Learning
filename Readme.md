@@ -150,9 +150,9 @@ opt = {
     }
 }
 
-<h1>learning rate used called linear learning rate warmup steps should be 1% of your 
+<h2>learning rate used called linear learning rate warmup steps should be 1% of your 
      number of iteratons.learning rate 
-     increases linearly till the warmup number of steps and then decreases.</h1>
+     increases linearly till the warmup number of steps and then decreases.</h2>
 lr = {
     'learning_rate_schedule': 'constant.linear_warmup.rsqrt_decay.rsqrt_depth',
     'lr_constant': 2 * (hidden_dim ** -0.5),
