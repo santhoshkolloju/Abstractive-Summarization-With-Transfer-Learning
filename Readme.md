@@ -6,9 +6,9 @@ scikit learn for text generation problems.
 The main idea behind this architecture is to use the transfer learning from pretrained BERT a masked language model ,
 I have replaced the Encoder part with BERT Encoder and the deocder is trained from the scratch.
 
-One of the advantages of using Transfomer Networks is training is much faster than LSTM based models as elimanate sequential behaviour in Transformer models.
+One of the advantages of using Transfomer Networks is training is much faster than LSTM based models as we elimanate sequential behaviour in Transformer models.
 
-Transformer based models generate more gramatically correct  coherent sentences.
+Transformer based models generate more gramatically correct  and coherent sentences.
 
 
 <h1> Will update the code with seed support for generation and make it as a genric code to run on any data </h1> 
