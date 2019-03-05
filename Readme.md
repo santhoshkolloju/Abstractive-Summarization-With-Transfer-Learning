@@ -172,7 +172,7 @@ test_batch_size = 4
 
 max_train_epoch = 20
 display_steps = 10
-<h1>Number of iiterations after which evaluation runs </h1>
+<h3>Number of iiterations after which evaluation runs </h3>
 eval_steps = 100000
 
 max_decoding_length = 400
@@ -204,7 +204,7 @@ processor = CNNDailymail()
 train_dataset = get_dataset(processor,tokenizer,"./",max_seq_length_src,max_seq_length_tgt,4,'train',"./data")
 eval_dataset = get_dataset(processor,tokenizer,"./",max_seq_length_src,max_seq_length_tgt,4,'eval',"./data")
 test_dataset = get_dataset(processor,tokenizer,"./",max_seq_length_src,max_seq_length_tgt,4,'test',"./data")
-<h1>Three files gets created under the folder data </h1>
+<h3>Three files gets created under the folder data </h3>
 
 <h2> Model Architecture </h2>
 <h3>Placeholders </h3>
