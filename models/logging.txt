@@ -1,0 +1,39 @@
+2019-03-08 20:02:04,048:INFO:Begin running with train_and_evaluate mode
+2019-03-08 20:03:50,512:INFO:Begin running with train_and_evaluate mode
+2019-03-08 20:05:00,060:INFO:Begin running with train_and_evaluate mode
+2019-03-08 20:08:14,915:INFO:Begin running with train_and_evaluate mode
+2019-03-08 20:12:42,894:INFO:Begin running with train_and_evaluate mode
+2019-03-08 20:22:29,211:INFO:Begin running with train_and_evaluate mode
+2019-03-08 20:22:39,003:INFO:step: 1, loss: 11.7971
+2019-03-08 20:22:42,072:INFO:step: 2, loss: 11.7444
+2019-03-08 20:22:45,111:INFO:step: 3, loss: 11.6753
+2019-03-08 20:22:48,523:INFO:step: 4, loss: 11.8856
+2019-03-08 20:22:51,878:INFO:step: 5, loss: 11.7765
+2019-03-08 20:22:55,144:INFO:step: 6, loss: 11.9311
+2019-03-08 20:22:58,406:INFO:step: 7, loss: 11.8430
+2019-03-08 20:23:01,664:INFO:step: 8, loss: 11.7669
+2019-03-08 20:23:04,947:INFO:step: 9, loss: 11.7373
+2019-03-08 20:23:08,286:INFO:step: 10, loss: 11.9579
+2019-03-08 20:23:11,635:INFO:step: 11, loss: 11.5600
+2019-03-08 20:23:15,028:INFO:step: 12, loss: 11.6753
+2019-03-08 20:23:18,427:INFO:step: 13, loss: 11.5919
+2019-03-08 20:23:21,835:INFO:step: 14, loss: 11.5611
+2019-03-08 20:23:25,236:INFO:step: 15, loss: 11.3855
+2019-03-08 20:23:28,616:INFO:step: 16, loss: 11.3497
+2019-03-08 20:23:31,978:INFO:step: 17, loss: 11.3501
+2019-03-08 20:23:35,314:INFO:step: 18, loss: 11.5671
+2019-03-08 20:23:38,646:INFO:step: 19, loss: 11.3275
+2019-03-08 20:23:41,964:INFO:step: 20, loss: 11.1347
+2019-03-08 20:23:45,385:INFO:step: 21, loss: 11.2892
+2019-03-08 20:23:48,854:INFO:step: 22, loss: 10.9162
+2019-03-08 20:23:52,347:INFO:step: 23, loss: 11.0379
+2019-03-08 20:23:55,775:INFO:step: 24, loss: 11.0149
+2019-03-08 20:23:59,314:INFO:step: 25, loss: 10.7168
+2019-03-08 20:24:02,892:INFO:step: 26, loss: 10.9317
+2019-03-08 20:24:06,576:INFO:step: 27, loss: 10.8448
+2019-03-08 20:24:10,262:INFO:step: 28, loss: 10.7415
+2019-03-08 20:24:13,979:INFO:step: 29, loss: 10.8425
+2019-03-08 20:24:17,663:INFO:step: 30, loss: 10.7316
+2019-03-08 20:24:21,293:INFO:step: 31, loss: 10.6841
+2019-03-08 20:24:24,977:INFO:step: 32, loss: 10.4804
+2019-03-08 20:24:28,662:INFO:step: 33, loss: 10.2873
