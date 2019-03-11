@@ -35,7 +35,12 @@ Step 2:
 
 Configurations for the model can be changes from config.py file
 
-
+Step 3:
+Inference 
+Run the command <b>python inference.py</b>
+This code runs a flask server 
+Use postman to send the POST request @http://your_ip_address:1118/results
+with two form parameters story,summary
 
 
 
