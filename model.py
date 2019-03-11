@@ -142,5 +142,6 @@ tf.summary.scalar('lr', learning_rate)
 tf.summary.scalar('mle_loss', mle_loss)
 summary_merged = tf.summary.merge_all()
 
-
+saver = tf.train.Saver(max_to_keep=5)
+best_results = {'score': 0, 'epoch': -1}
 
