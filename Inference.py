@@ -17,6 +17,29 @@ from config import *
 from model import *
 from preprocess import *
 
+
+start_tokens = tf.fill([tx.utils.get_batch_size(src_input_ids)],
+                       bos_token_id)
+predictions = decoder(
+    memory=encoder_output,
+    memory_sequence_length=src_input_length,
+    decoding_strategy='infer_greedy',
+    beam_width=beam_width,
+    alpha=alpha,
+    start_tokens=start_tokens,
+    end_token=eos_token_id,
+    max_decoding_length=400,
+    mode=tf.estimator.ModeKeys.PREDICT
+)
+if beam_width <= 1:
+    inferred_ids = predictions[0].sample_id
+else:
+    # Uses the best sample by beam search
+    inferred_ids = predictions['sample_id'][:, :, 0]
+
+
+
+
 tokenizer = tokenization.FullTokenizer(
       vocab_file=os.path.join(bert_pretrain_dir, 'vocab.txt'),
       do_lower_case=True)
