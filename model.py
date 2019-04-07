@@ -131,6 +131,10 @@ tvars =tf.trainable_variables()
 
 non_bert_vars = [var for var in tvars if 'bert' not in var.name]
 
+
+
+
+
 train_op = tx.core.get_train_op(
         mle_loss,
         learning_rate=learning_rate,
@@ -144,4 +148,25 @@ summary_merged = tf.summary.merge_all()
 
 saver = tf.train.Saver(max_to_keep=5)
 best_results = {'score': 0, 'epoch': -1}
+
+start_tokens = tf.fill([tx.utils.get_batch_size(src_input_ids)],
+                       bos_token_id)
+predictions = decoder(
+    memory=encoder_output,
+    memory_sequence_length=src_input_length,
+    decoding_strategy='infer_greedy',
+    beam_width=beam_width,
+    alpha=alpha,
+    start_tokens=start_tokens,
+    end_token=eos_token_id,
+    max_decoding_length=400,
+    mode=tf.estimator.ModeKeys.PREDICT
+)
+if beam_width <= 1:
+    inferred_ids = predictions[0].sample_id
+else:
+    # Uses the best sample by beam search
+    inferred_ids = predictions['sample_id'][:, :, 0]
+
+
 
