@@ -86,7 +86,7 @@ def results():
 
 
 if __name__=="__main__":
-	  sess.run(tf.global_variables_initializer())
+    sess.run(tf.global_variables_initializer())
     sess.run(tf.local_variables_initializer())
     sess.run(tf.tables_initializer())
     saver.restore(sess, tf.train.latest_checkpoint(model_dir))
